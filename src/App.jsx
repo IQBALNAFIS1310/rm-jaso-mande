@@ -1,18 +1,23 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { Outlet } from "react-router-dom";
+import {createContext } from "react";
 
-function App() {
-  const [count, setCount] = useState(0)
+export const CartContext = createContext();
 
+export default function App() {
   return (
-    <>
-      <p className="read-the-docs">
-        HALOO SAYANG ABANG
-      </p>
-    </>
-  )
-}
+    <CartContext.Provider>
+      <div className="flex min-h-screen flex-col">
+        {/* Header */}
+        <Header />
 
-export default App
+        {/* Konten halaman (akan berubah sesuai route) */}
+        <main className="flex-1">
+          <Outlet />
+        </main>
+
+        {/* Footer */}
+        <Footer />
+      </div>
+    </CartContext.Provider>
+  );
+}
