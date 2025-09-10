@@ -1,129 +1,45 @@
-// src/pages/DashboardManager.jsx
-import { useEffect, useState } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { useState } from "react";
+import MenuManager from "./components/MenuManajer";
+import Transactions from "./components/Transactions";
+import FinanceManager from "./components/FinanceManajer";
 
 export default function DashboardManager() {
-  const [menus, setMenus] = useState([]);
-  const [name, setName] = useState("");
-  const [price, setPrice] = useState(0);
-
-  // State untuk edit menu
-  const [editId, setEditId] = useState(null);
-  const [editName, setEditName] = useState("");
-  const [editPrice, setEditPrice] = useState(0);
-
-  // Ambil data menu dari Supabase
-  useEffect(() => {
-    const fetchMenus = async () => {
-      const { data } = await supabase.from("menus").select("*");
-      setMenus(data || []);
-    };
-    fetchMenus();
-  }, []);
-
-  // Tambah menu baru
-  const addMenu = async () => {
-    if (!name || price <= 0) return;
-    const { data } = await supabase.from("menus").insert({ name, price }).select();
-    setMenus([...menus, ...data]);
-    setName("");
-    setPrice(0);
-  };
-
-  // Hapus menu
-  const deleteMenu = async (id) => {
-    await supabase.from("menus").delete().eq("id", id);
-    setMenus(menus.filter(m => m.id !== id));
-  };
-
-  // Siapkan edit menu
-  const startEdit = (menu) => {
-    setEditId(menu.id);
-    setEditName(menu.name);
-    setEditPrice(menu.price);
-  };
-
-  // Simpan edit menu
-  const saveEdit = async () => {
-    if (!editName || editPrice <= 0) return;
-    const { data } = await supabase
-      .from("menus")
-      .update({ name: editName, price: editPrice })
-      .eq("id", editId)
-      .select();
-
-    setMenus(menus.map(m => (m.id === editId ? data[0] : m)));
-    setEditId(null);
-    setEditName("");
-    setEditPrice(0);
-  };
-
-  // Batal edit
-  const cancelEdit = () => {
-    setEditId(null);
-    setEditName("");
-    setEditPrice(0);
-  };
+  const [activeTab, setActiveTab] = useState("menu");
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Dashboard Manager</h1>
-
-      {/* Form Tambah Menu */}
-      <div className="mb-6">
-        <h2 className="font-semibold mb-2">Tambah Menu Baru</h2>
-        <input
-          placeholder="Nama Menu"
-          value={name}
-          onChange={e => setName(e.target.value)}
-          className="border p-2 mr-2"
-        />
-        <input
-          placeholder="Harga"
-          type="number"
-          value={price}
-          onChange={e => setPrice(Number(e.target.value))}
-          className="border p-2 mr-2"
-        />
-        <button onClick={addMenu} className="bg-blue-500 text-white p-2 rounded">Tambah</button>
+    <div className="flex flex-col md:flex-row h-screen">
+      {/* Sidebar */}
+      <div className="bg-gray-800 text-white md:w-64 w-full flex md:flex-col flex-row">
+        <h1 className="text-2xl font-bold p-4 border-b md:border-b-0 md:border-r text-center md:text-left">
+          Dashboard
+        </h1>
+        <div className="flex md:flex-col flex-row w-full">
+          <button
+            onClick={() => setActiveTab("menu")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Menu
+          </button>
+          <button
+            onClick={() => setActiveTab("finance")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Keuangan
+          </button>
+          <button
+            onClick={() => setActiveTab("transactions")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Transaksi
+          </button>
+        </div>
       </div>
 
-      {/* Daftar Menu */}
-      <div>
-        <h2 className="font-semibold mb-2">Daftar Menu</h2>
-        <ul>
-          {menus.map(menu => (
-            <li key={menu.id} className="flex items-center justify-between mb-2">
-              {editId === menu.id ? (
-                // Input saat edit
-                <div className="flex items-center gap-2">
-                  <input
-                    value={editName}
-                    onChange={e => setEditName(e.target.value)}
-                    className="border p-1"
-                  />
-                  <input
-                    type="number"
-                    value={editPrice}
-                    onChange={e => setEditPrice(Number(e.target.value))}
-                    className="border p-1 w-24"
-                  />
-                  <button onClick={saveEdit} className="bg-green-500 text-white px-2 rounded">Simpan</button>
-                  <button onClick={cancelEdit} className="bg-gray-500 text-white px-2 rounded">Batal</button>
-                </div>
-              ) : (
-                // Tampilkan menu biasa
-                <div className="flex items-center justify-between w-full">
-                  <span>{menu.name} - IDR {menu.price}</span>
-                  <div className="flex gap-2">
-                    <button onClick={() => startEdit(menu)} className="bg-yellow-500 text-white px-2 rounded">Edit</button>
-                    <button onClick={() => deleteMenu(menu.id)} className="bg-red-500 text-white px-2 rounded">Hapus</button>
-                  </div>
-                </div>
-              )}
-            </li>
-          ))}
-        </ul>
+      {/* Main Content */}
+      <div className="flex-1 p-6 overflow-auto">
+        {activeTab === "menu" && <MenuManager />}
+        {activeTab === "finance" && <FinanceManager />}
+        {activeTab === "transactions" && <Transactions />}
       </div>
     </div>
   );

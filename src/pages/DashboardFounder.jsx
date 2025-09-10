@@ -3,50 +3,59 @@ import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
 
 export default function DashboardFounder() {
-  const [sales, setSales] = useState([]);
-  const [totalRevenue, setTotalRevenue] = useState(0);
-  const [topMenus, setTopMenus] = useState([]);
+  const [dailySales, setDailySales] = useState([]);
+  const [financeSummary, setFinanceSummary] = useState({ income: 0, expense: 0 });
 
+  // Fetch penjualan harian
   useEffect(() => {
-    const fetchData = async () => {
-      // Ambil transaksi hari ini
-      const { data: transactions } = await supabase
+    const fetchDailySales = async () => {
+      const { data } = await supabase
         .from("transactions")
-        .select(`id, total, created_at, transaction_items(menu_id, quantity, total, price_each, menu_id(name))`)
-        .gte('created_at', new Date().toISOString().split('T')[0]) // hari ini
+        .select("id,total,created_at")
+        .order("created_at", { ascending: false });
 
-      setSales(transactions || []);
-
-      // total revenue
-      const revenue = transactions?.reduce((acc, t) => acc + t.total, 0) || 0;
-      setTotalRevenue(revenue);
-
-      // menu terlaris
-      const menuCount = {};
-      transactions?.forEach(t => {
-        t.transaction_items?.forEach(item => {
-          if (!menuCount[item.menu_id]) menuCount[item.menu_id] = { name: item.menu_id.name, quantity: 0 };
-          menuCount[item.menu_id].quantity += item.quantity;
-        })
+      // agregasi per tanggal
+      const salesByDate = {};
+      data.forEach(tx => {
+        const date = new Date(tx.created_at).toLocaleDateString();
+        salesByDate[date] = (salesByDate[date] || 0) + tx.total;
       });
-      setTopMenus(Object.values(menuCount).sort((a,b) => b.quantity - a.quantity).slice(0,5));
+
+      setDailySales(Object.entries(salesByDate).map(([date, total]) => ({ date, total })));
     };
 
-    fetchData();
+    const fetchFinance = async () => {
+      const { data } = await supabase.from("finances").select("*");
+      let income = 0, expense = 0;
+      data.forEach(f => {
+        if (f.type === "income") income += f.amount;
+        else if (f.type === "expense") expense += f.amount;
+      });
+      setFinanceSummary({ income, expense });
+    };
+
+    fetchDailySales();
+    fetchFinance();
   }, []);
 
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold mb-4">Dashboard Founder</h1>
-      <div className="mb-4">
-        <h2 className="font-semibold">Total Penjualan Hari Ini:</h2>
-        <p>IDR {totalRevenue.toLocaleString()}</p>
-      </div>
-      <div className="mb-4">
-        <h2 className="font-semibold">Menu Terlaris:</h2>
+
+      <div className="mb-6">
+        <h2 className="font-semibold mb-2">Penjualan Harian</h2>
         <ul>
-          {topMenus.map(menu => <li key={menu.name}>{menu.name} - {menu.quantity} pcs</li>)}
+          {dailySales.map(s => (
+            <li key={s.date}>{s.date}: IDR {s.total}</li>
+          ))}
         </ul>
+      </div>
+
+      <div>
+        <h2 className="font-semibold mb-2">Laba Rugi</h2>
+        <p>Pemasukan: IDR {financeSummary.income}</p>
+        <p>Pengeluaran: IDR {financeSummary.expense}</p>
+        <p><strong>Laba Bersih: IDR {financeSummary.income - financeSummary.expense}</strong></p>
       </div>
     </div>
   );
