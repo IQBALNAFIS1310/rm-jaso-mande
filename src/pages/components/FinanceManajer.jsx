@@ -16,7 +16,6 @@ export default function FinanceManager() {
   const [editDescription, setEditDescription] = useState("");
   const [editDate, setEditDate] = useState(new Date().toISOString().slice(0, 10));
 
-  // FILTER & SEARCH
   const [filterDate, setFilterDate] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
   const [searchKeyword, setSearchKeyword] = useState("");
@@ -30,7 +29,10 @@ export default function FinanceManager() {
   };
 
   const addFinance = async () => {
-    if (!amount || amount <= 0) return;
+    if (!amount || amount <= 0 || !category || !description) {
+      alert("Harap isi semua field dengan benar!");
+      return;
+    }
     const { data } = await supabase.from("finances").insert({
       type, amount, category, description, date
     }).select();
@@ -39,6 +41,10 @@ export default function FinanceManager() {
   };
 
   const updateFinance = async (id) => {
+    if (!editAmount || editAmount <= 0 || !editCategory || !editDescription) {
+      alert("Harap isi semua field dengan benar!");
+      return;
+    }
     const { data } = await supabase.from("finances").update({
       type: editType, amount: editAmount, category: editCategory, description: editDescription, date: editDate
     }).eq("id", id).select();
@@ -47,11 +53,11 @@ export default function FinanceManager() {
   };
 
   const deleteFinance = async (id) => {
+    if (!confirm("Apakah Anda yakin ingin menghapus data keuangan ini?")) return;
     await supabase.from("finances").delete().eq("id", id);
     setFinances(finances.filter(f => f.id !== id));
   };
 
-  // FILTERING & SEARCHING
   const filteredFinances = finances
     .filter(f => !filterDate || f.date === filterDate)
     .filter(f => !filterCategory || f.category.toLowerCase().includes(filterCategory.toLowerCase()))
@@ -83,7 +89,7 @@ export default function FinanceManager() {
 
       {/* FILTER & SEARCH */}
       <div className="flex gap-2 mb-4 flex-wrap items-center">
-        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="border p-2" placeholder="Filter tanggal"/>
+        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="border p-2"/>
         <input placeholder="Filter kategori" value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border p-2"/>
         <input placeholder="Cari deskripsi" value={searchKeyword} onChange={e => setSearchKeyword(e.target.value)} className="border p-2"/>
         <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="border p-2">
