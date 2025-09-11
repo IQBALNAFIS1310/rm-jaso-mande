@@ -7,8 +7,8 @@ import AccountsManager from "./components/AccountsManager";
 import MenuStocksManager from "./components/MenuStokManajer";
 import ReviewsManager from "./components/ReviewsManajer";
 import Overview from "./components/Overview";
-// import ActivityLogs from "./components/ActivityLogs";
-// import Reporting from "./components/Reporting";
+import Reporting from "./components/Reporting";
+import ActivityLog from "./components/ActivityLog";
 
 export default function DashboardFounder() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -93,8 +93,8 @@ export default function DashboardFounder() {
         {activeTab === "accounts" && <AccountsManager />}
         {activeTab === "stocks" && <MenuStocksManager />}
         {activeTab === "reviews" && <ReviewsManager />}
-        {/* {activeTab === "logs" && <ActivityLogs />} */}
-        {/* {activeTab === "reporting" && <Reporting />} */}
+        {activeTab === "logs" && <ActivityLog />}
+        {activeTab === "reporting" && <Reporting />}
       </div>
     </div>
   );
