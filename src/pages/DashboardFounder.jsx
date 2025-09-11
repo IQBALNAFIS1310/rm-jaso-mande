@@ -1,61 +1,100 @@
 // src/pages/DashboardFounder.jsx
-import { useEffect, useState } from "react";
-import { supabase } from "../utils/supabaseClient";
+import { useState } from "react";
+import MenuManager from "./components/MenusManajer";
+import FinanceManager from "./components/FinanceManajer";
+import TransactionsManager from "./components/Transactions";
+import AccountsManager from "./components/AccountsManager";
+import MenuStocksManager from "./components/MenuStokManajer";
+import ReviewsManager from "./components/ReviewsManajer";
+import Overview from "./components/Overview";
+// import ActivityLogs from "./components/ActivityLogs";
+// import Reporting from "./components/Reporting";
 
 export default function DashboardFounder() {
-  const [dailySales, setDailySales] = useState([]);
-  const [financeSummary, setFinanceSummary] = useState({ income: 0, expense: 0 });
-
-  // Fetch penjualan harian
-  useEffect(() => {
-    const fetchDailySales = async () => {
-      const { data } = await supabase
-        .from("transactions")
-        .select("id,total,created_at")
-        .order("created_at", { ascending: false });
-
-      // agregasi per tanggal
-      const salesByDate = {};
-      data.forEach(tx => {
-        const date = new Date(tx.created_at).toLocaleDateString();
-        salesByDate[date] = (salesByDate[date] || 0) + tx.total;
-      });
-
-      setDailySales(Object.entries(salesByDate).map(([date, total]) => ({ date, total })));
-    };
-
-    const fetchFinance = async () => {
-      const { data } = await supabase.from("finances").select("*");
-      let income = 0, expense = 0;
-      data.forEach(f => {
-        if (f.type === "income") income += f.amount;
-        else if (f.type === "expense") expense += f.amount;
-      });
-      setFinanceSummary({ income, expense });
-    };
-
-    fetchDailySales();
-    fetchFinance();
-  }, []);
+  const [activeTab, setActiveTab] = useState("overview");
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Dashboard Founder</h1>
-
-      <div className="mb-6">
-        <h2 className="font-semibold mb-2">Penjualan Harian</h2>
-        <ul>
-          {dailySales.map(s => (
-            <li key={s.date}>{s.date}: IDR {s.total}</li>
-          ))}
-        </ul>
+    <div className="flex flex-col md:flex-row h-screen">
+      {/* Sidebar */}
+      <div className="bg-gray-800 text-white md:w-64 w-full flex md:flex-col flex-row">
+        <h1 className="text-2xl font-bold p-4 border-b md:border-b-0 md:border-r text-center md:text-left">
+          Founder Dashboard
+        </h1>
+        <div className="flex md:flex-col flex-row w-full">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab("menu")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Menu
+          </button>
+          <button
+            onClick={() => setActiveTab("finance")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Keuangan
+          </button>
+          <button
+            onClick={() => setActiveTab("transactions")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Transaksi
+          </button>
+          <button
+            onClick={() => setActiveTab("accounts")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Akun
+          </button>
+          <button
+            onClick={() => setActiveTab("stocks")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Stok Menu
+          </button>
+          <button
+            onClick={() => setActiveTab("reviews")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Review
+          </button>
+          <button
+            onClick={() => setActiveTab("logs")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Activity Logs
+          </button>
+          <button
+            onClick={() => setActiveTab("reporting")}
+            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
+          >
+            Reporting
+          </button>
+        </div>
       </div>
 
-      <div>
-        <h2 className="font-semibold mb-2">Laba Rugi</h2>
-        <p>Pemasukan: IDR {financeSummary.income}</p>
-        <p>Pengeluaran: IDR {financeSummary.expense}</p>
-        <p><strong>Laba Bersih: IDR {financeSummary.income - financeSummary.expense}</strong></p>
+      {/* Main Content */}
+      <div className="flex-1 p-6 overflow-auto">
+        {activeTab === "overview" && (
+          <div>
+            <h1 className="text-2xl font-bold mb-4">Overview</h1>
+            <p>Ringkasan KPI, penjualan harian, laba/rugi, dsb...</p>
+          </div>
+        )}
+        {activeTab==="overview"&& <Overview/>}
+        {activeTab === "menu" && <MenuManager />}
+        {activeTab === "finance" && <FinanceManager />}
+        {activeTab === "transactions" && <TransactionsManager />}
+        {activeTab === "accounts" && <AccountsManager />}
+        {activeTab === "stocks" && <MenuStocksManager />}
+        {activeTab === "reviews" && <ReviewsManager />}
+        {/* {activeTab === "logs" && <ActivityLogs />} */}
+        {/* {activeTab === "reporting" && <Reporting />} */}
       </div>
     </div>
   );

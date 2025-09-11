@@ -1,10 +1,22 @@
 import { useState } from "react";
-import MenuManager from "./components/MenuManajer";
+import MenuManager from "./components/MenusManajer";
 import Transactions from "./components/Transactions";
 import FinanceManager from "./components/FinanceManajer";
+import ReviewsManager from "./components/ReviewsManajer";
+import MenuStocksManager from "./components/MenuStokManajer";
+import AccountsManager from "./components/AccountsManager";
 
 export default function DashboardManager() {
   const [activeTab, setActiveTab] = useState("menu");
+
+  const tabs = [
+    { key: "menu", label: "Menu" },
+    { key: "finance", label: "Keuangan" },
+    { key: "transactions", label: "Transaksi" },
+    { key: "menuStock", label: "Stok Menu" },
+    { key: "reviews", label: "Review" },
+    { key: "accounts", label: "Akun" },
+  ];
 
   return (
     <div className="flex flex-col md:flex-row h-screen">
@@ -14,24 +26,17 @@ export default function DashboardManager() {
           Dashboard
         </h1>
         <div className="flex md:flex-col flex-row w-full">
-          <button
-            onClick={() => setActiveTab("menu")}
-            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
-          >
-            Menu
-          </button>
-          <button
-            onClick={() => setActiveTab("finance")}
-            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
-          >
-            Keuangan
-          </button>
-          <button
-            onClick={() => setActiveTab("transactions")}
-            className="p-4 hover:bg-gray-700 flex-1 text-center md:text-left"
-          >
-            Transaksi
-          </button>
+          {tabs.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`p-4 hover:bg-gray-700 flex-1 text-center md:text-left ${
+                activeTab === tab.key ? "bg-gray-700" : ""
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -40,6 +45,9 @@ export default function DashboardManager() {
         {activeTab === "menu" && <MenuManager />}
         {activeTab === "finance" && <FinanceManager />}
         {activeTab === "transactions" && <Transactions />}
+        {activeTab === "menuStock" && <MenuStocksManager />}
+        {activeTab === "reviews" && <ReviewsManager />}
+        {activeTab === "accounts" && <AccountsManager />}
       </div>
     </div>
   );
