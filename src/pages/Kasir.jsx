@@ -1,6 +1,7 @@
 // src/pages/Kasir.jsx
 import { useEffect, useState } from "react";
 import { supabase } from "../utils/supabaseClient";
+import Transactions from "./components/Transactions";
 
 export default function Kasir() {
   const [menus, setMenus] = useState([]);
@@ -9,6 +10,7 @@ export default function Kasir() {
   const [total, setTotal] = useState(0);
   const [change, setChange] = useState(0);
   const [msg, setMsg] = useState("");
+  const [paymentDetails, setPaymentDetails] = useState({});
 
   useEffect(() => {
     const fetchMenus = async () => {
@@ -23,6 +25,15 @@ export default function Kasir() {
     setTotal(newTotal);
     setChange(payment - newTotal);
   }, [cart, payment]);
+
+  const addDenomination = (val) => {
+    setPayment(payment + val);
+    setPaymentDetails(prev => ({
+      ...prev,
+      [val]: (prev[val] || 0) + 1,
+    }));
+  };
+
 
   const addToCart = (menu) => {
     const exists = cart.find((item) => item.id === menu.id);
@@ -59,6 +70,18 @@ export default function Kasir() {
       total: item.price * item.qty,
     }));
 
+    const paymentItems = Object.entries(paymentDetails).map(([denomination, quantity]) => ({
+      transaction_id: trx.id,
+      denomination: parseInt(denomination),
+      quantity,
+    }));
+    const { error: paymentError } = await supabase.from("transaction_payments").insert(paymentItems);
+    if (paymentError) {
+      setMsg("Gagal menyimpan detail pembayaran");
+      return;
+    }
+
+
     const { error: itemError } = await supabase.from("transaction_items").insert(items);
 
     if (itemError) setMsg("Gagal menyimpan item transaksi");
@@ -66,6 +89,7 @@ export default function Kasir() {
       setMsg("Transaksi berhasil!");
       setCart([]);
       setPayment(0);
+      setPaymentDetails({}); // reset pecahan uang
     }
   };
 
@@ -148,7 +172,7 @@ export default function Kasir() {
             <button
               key={val}
               type="button"
-              onClick={() => setPayment(payment + val)}
+              onClick={() => addDenomination(val)}
               className="bg-gray-200 px-3 py-1 rounded text-sm"
             >
               +{val.toLocaleString()}
@@ -163,6 +187,7 @@ export default function Kasir() {
           Bayar
         </button>
       </div>
+      {/* <Transactions/> */}
     </div>
   );
 }
