@@ -102,12 +102,12 @@ export default function Login() {
           </button>
         </form>
 
-        <p className="mt-4 text-center text-gray-600">
+        {/* <p className="mt-4 text-center text-gray-600">
           Belum punya akun?{" "}
           <Link to="/register" className="text-blue-500 hover:underline">
             Daftar di sini
           </Link>
-        </p>
+        </p> */}
       </div>
     </div>
   );

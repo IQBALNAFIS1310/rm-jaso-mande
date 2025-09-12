@@ -24,40 +24,79 @@ export default function ActivityLog() {
     setLoading(false);
   };
 
+  // Helper format tanggal
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Activity Logs</h2>
+    <div className="p-4">
+      <h2 className="text-2xl font-bold mb-6">Activity Logs</h2>
+
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       ) : logs.length === 0 ? (
-        <p>Tidak ada aktivitas</p>
+        <p className="text-gray-500 italic">Tidak ada aktivitas</p>
       ) : (
-        <table className="w-full border">
-          <thead className="bg-gray-200">
-            <tr>
-              <th className="border p-2">ID</th>
-              <th className="border p-2">Akun</th>
-              <th className="border p-2">Role</th>
-              <th className="border p-2">Aksi</th>
-              <th className="border p-2">Detail</th>
-              <th className="border p-2">Tanggal</th>
-            </tr>
-          </thead>
-          <tbody>
+        <>
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full border-collapse bg-white shadow rounded-lg">
+              <thead className="bg-gray-100 text-left">
+                <tr>
+                  <th className="border p-3">ID</th>
+                  <th className="border p-3">Akun</th>
+                  <th className="border p-3">Role</th>
+                  <th className="border p-3">Aksi</th>
+                  <th className="border p-3">Detail</th>
+                  <th className="border p-3">Tanggal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr key={log.id} className="hover:bg-gray-50 transition">
+                    <td className="border p-3">{log.id}</td>
+                    <td className="border p-3">{log.accounts?.name || "Unknown"}</td>
+                    <td className="border p-3">{log.accounts?.role || "-"}</td>
+                    <td className="border p-3">{log.action}</td>
+                    <td className="border p-3">{log.detail || "-"}</td>
+                    <td className="border p-3">{formatDate(log.created_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile Card */}
+          <div className="md:hidden grid gap-4">
             {logs.map((log) => (
-              <tr key={log.id}>
-                <td className="border p-2">{log.id}</td>
-                <td className="border p-2">{log.accounts?.name || "Unknown"}</td>
-                <td className="border p-2">{log.accounts?.role || "Unknown"}</td>
-                <td className="border p-2">{log.action}</td>
-                <td className="border p-2">{log.detail || "-"}</td>
-                <td className="border p-2">
-                  {new Date(log.created_at).toLocaleString()}
-                </td>
-              </tr>
+              <div
+                key={log.id}
+                className="bg-white shadow rounded-lg p-4 border space-y-1"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="font-bold">{log.accounts?.name || "Unknown"}</h3>
+                  <span className="text-xs text-gray-500">{formatDate(log.created_at)}</span>
+                </div>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Role:</span> {log.accounts?.role || "-"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Aksi:</span> {log.action}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <span className="font-semibold">Detail:</span> {log.detail || "-"}
+                </p>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </div>
   );

@@ -71,92 +71,103 @@ export default function FinanceManager() {
     });
 
   return (
-    <div>
-      <h2 className="text-xl font-bold mb-4">Keuangan</h2>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6">💰 Manajemen Keuangan</h2>
 
       {/* Add Finance */}
-      <div className="flex gap-2 mb-4 flex-wrap">
-        <select value={type} onChange={e => setType(e.target.value)} className="border p-2">
-          <option value="income">Pemasukan</option>
-          <option value="expense">Pengeluaran</option>
-        </select>
-        <input type="number" placeholder="Jumlah" value={amount} onChange={e => setAmount(Number(e.target.value))} className="border p-2"/>
-        <input placeholder="Kategori" value={category} onChange={e => setCategory(e.target.value)} className="border p-2"/>
-        <input placeholder="Deskripsi" value={description} onChange={e => setDescription(e.target.value)} className="border p-2"/>
-        <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border p-2"/>
-        <button onClick={addFinance} className="bg-green-500 text-white px-4 rounded">Tambah</button>
+      <div className="bg-white p-4 rounded-lg shadow mb-6">
+        <h3 className="font-semibold mb-2">Tambah Transaksi</h3>
+        <div className="flex gap-2 flex-wrap">
+          <select value={type} onChange={e => setType(e.target.value)} className="border p-2 rounded">
+            <option value="income">Pemasukan</option>
+            <option value="expense">Pengeluaran</option>
+          </select>
+          <input type="number" placeholder="Jumlah" value={amount} onChange={e => setAmount(Number(e.target.value))} className="border p-2 rounded"/>
+          <input placeholder="Kategori" value={category} onChange={e => setCategory(e.target.value)} className="border p-2 rounded"/>
+          <input placeholder="Deskripsi" value={description} onChange={e => setDescription(e.target.value)} className="border p-2 rounded"/>
+          <input type="date" value={date} onChange={e => setDate(e.target.value)} className="border p-2 rounded"/>
+          <button onClick={addFinance} className="bg-green-600 hover:bg-green-700 text-white px-4 rounded">Tambah</button>
+        </div>
       </div>
 
       {/* FILTER & SEARCH */}
-      <div className="flex gap-2 mb-4 flex-wrap items-center">
-        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="border p-2"/>
-        <input placeholder="Filter kategori" value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border p-2"/>
-        <input placeholder="Cari deskripsi" value={searchKeyword} onChange={e => setSearchKeyword(e.target.value)} className="border p-2"/>
-        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="border p-2">
+      <div className="bg-white p-4 rounded-lg shadow mb-6 flex gap-2 flex-wrap items-center">
+        <input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} className="border p-2 rounded"/>
+        <input placeholder="Filter kategori" value={filterCategory} onChange={e => setFilterCategory(e.target.value)} className="border p-2 rounded"/>
+        <input placeholder="Cari deskripsi" value={searchKeyword} onChange={e => setSearchKeyword(e.target.value)} className="border p-2 rounded"/>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)} className="border p-2 rounded">
           <option value="date_desc">Tanggal Terbaru</option>
           <option value="date_asc">Tanggal Terlama</option>
           <option value="amount_desc">Jumlah Terbesar</option>
           <option value="amount_asc">Jumlah Terkecil</option>
         </select>
-        <button onClick={fetchFinances} className="bg-blue-500 text-white px-4 rounded">Reset Filter</button>
+        <button onClick={fetchFinances} className="bg-blue-600 hover:bg-blue-700 text-white px-4 rounded">Reset</button>
       </div>
 
       {/* Finance List */}
-      <table className="w-full border">
-        <thead className="bg-gray-200">
-          <tr>
-            <th className="border p-2">Tanggal</th>
-            <th className="border p-2">Tipe</th>
-            <th className="border p-2">Kategori</th>
-            <th className="border p-2">Jumlah</th>
-            <th className="border p-2">Deskripsi</th>
-            <th className="border p-2">Aksi</th>
-          </tr>
-        </thead>
-        <tbody>
-          {filteredFinances.map(f => (
-            <tr key={f.id} className="border">
-              {editId === f.id ? (
-                <>
-                  <td className="border p-1"><input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="border p-1 w-full"/></td>
-                  <td className="border p-1">
-                    <select value={editType} onChange={e => setEditType(e.target.value)} className="border p-1 w-full">
-                      <option value="income">Pemasukan</option>
-                      <option value="expense">Pengeluaran</option>
-                    </select>
-                  </td>
-                  <td className="border p-1"><input value={editCategory} onChange={e => setEditCategory(e.target.value)} className="border p-1 w-full"/></td>
-                  <td className="border p-1"><input type="number" value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} className="border p-1 w-full"/></td>
-                  <td className="border p-1"><input value={editDescription} onChange={e => setEditDescription(e.target.value)} className="border p-1 w-full"/></td>
-                  <td className="border p-1 flex gap-1">
-                    <button onClick={() => updateFinance(f.id)} className="bg-green-500 text-white px-2 rounded">Simpan</button>
-                    <button onClick={() => setEditId(null)} className="bg-gray-500 text-white px-2 rounded">Batal</button>
-                  </td>
-                </>
-              ) : (
-                <>
-                  <td className="border p-2">{f.date}</td>
-                  <td className="border p-2">{f.type}</td>
-                  <td className="border p-2">{f.category}</td>
-                  <td className="border p-2">{f.amount}</td>
-                  <td className="border p-2">{f.description}</td>
-                  <td className="border p-2 flex gap-1">
-                    <button onClick={() => {
-                      setEditId(f.id); 
-                      setEditType(f.type); 
-                      setEditAmount(f.amount); 
-                      setEditCategory(f.category); 
-                      setEditDescription(f.description); 
-                      setEditDate(f.date);
-                    }} className="bg-yellow-500 text-white px-2 rounded">Edit</button>
-                    <button onClick={() => deleteFinance(f.id)} className="bg-red-500 text-white px-2 rounded">Hapus</button>
-                  </td>
-                </>
-              )}
+      <div className="bg-white rounded-lg shadow overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100 text-left">
+            <tr>
+              <th className="p-3">Tanggal</th>
+              <th className="p-3">Tipe</th>
+              <th className="p-3">Kategori</th>
+              <th className="p-3">Jumlah</th>
+              <th className="p-3">Deskripsi</th>
+              <th className="p-3">Aksi</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {filteredFinances.map(f => (
+              <tr key={f.id} className="border-t hover:bg-gray-50">
+                {editId === f.id ? (
+                  <>
+                    <td className="p-2"><input type="date" value={editDate} onChange={e => setEditDate(e.target.value)} className="border p-1 rounded w-full"/></td>
+                    <td className="p-2">
+                      <select value={editType} onChange={e => setEditType(e.target.value)} className="border p-1 rounded w-full">
+                        <option value="income">Pemasukan</option>
+                        <option value="expense">Pengeluaran</option>
+                      </select>
+                    </td>
+                    <td className="p-2"><input value={editCategory} onChange={e => setEditCategory(e.target.value)} className="border p-1 rounded w-full"/></td>
+                    <td className="p-2"><input type="number" value={editAmount} onChange={e => setEditAmount(Number(e.target.value))} className="border p-1 rounded w-full"/></td>
+                    <td className="p-2"><input value={editDescription} onChange={e => setEditDescription(e.target.value)} className="border p-1 rounded w-full"/></td>
+                    <td className="p-2 flex gap-1">
+                      <button onClick={() => updateFinance(f.id)} className="bg-green-600 hover:bg-green-700 text-white px-2 rounded">Simpan</button>
+                      <button onClick={() => setEditId(null)} className="bg-gray-500 hover:bg-gray-600 text-white px-2 rounded">Batal</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td className="p-2">{f.date}</td>
+                    <td className="p-2">
+                      <span className={`px-2 py-1 rounded text-white text-xs ${f.type === "income" ? "bg-green-500" : "bg-red-500"}`}>
+                        {f.type === "income" ? "Pemasukan" : "Pengeluaran"}
+                      </span>
+                    </td>
+                    <td className="p-2">{f.category}</td>
+                    <td className={`p-2 font-semibold ${f.type === "income" ? "text-green-600" : "text-red-600"}`}>
+                      Rp {f.amount.toLocaleString()}
+                    </td>
+                    <td className="p-2">{f.description}</td>
+                    <td className="p-2 flex gap-1">
+                      <button onClick={() => {
+                        setEditId(f.id); 
+                        setEditType(f.type); 
+                        setEditAmount(f.amount); 
+                        setEditCategory(f.category); 
+                        setEditDescription(f.description); 
+                        setEditDate(f.date);
+                      }} className="bg-yellow-500 hover:bg-yellow-600 text-white px-2 rounded">Edit</button>
+                      <button onClick={() => deleteFinance(f.id)} className="bg-red-600 hover:bg-red-700 text-white px-2 rounded">Hapus</button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

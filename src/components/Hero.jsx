@@ -1,8 +1,10 @@
+import bgn from '../assets/bgn-lauk.jpg'
+
 export default function Hero() {
   return (
     <section
       className="h-[80vh] flex flex-col justify-center items-center text-center bg-cover bg-center relative"
-      style={{ backgroundImage: "url('https://i.pinimg.com/736x/37/66/48/37664853a9c34a0ea12b712c6ef434f7.jpg')" }}
+      style={{ backgroundImage: `url(${bgn})` }}
     >
       <div className="absolute inset-0"></div>
       <div className="relative z-10 text-white">
