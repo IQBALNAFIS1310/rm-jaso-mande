@@ -3,11 +3,25 @@ import { supabase } from "../../utils/supabaseClient";
 
 export default function MenusManager() {
   const [menus, setMenus] = useState([]);
-  const [newMenu, setNewMenu] = useState({ name: "", price: 0 });
+  const [newMenu, setNewMenu] = useState({
+    name: "",
+    price: 0,
+    description: "",
+    image: "",
+    is_visible: true,
+  });
+  const [newImageFile, setNewImageFile] = useState(null); 
   const [editId, setEditId] = useState(null);
-  const [editData, setEditData] = useState({ name: "", price: 0 });
+  const [editData, setEditData] = useState({
+    name: "",
+    price: 0,
+    description: "",
+    image: "",
+    is_visible: true,
+  });
+  const [editImageFile, setEditImageFile] = useState(null); 
   const [message, setMessage] = useState("");
-  const [messageType, setMessageType] = useState("info"); // success, error, info
+  const [messageType, setMessageType] = useState("info");
 
   useEffect(() => {
     fetchMenus();
@@ -21,12 +35,38 @@ export default function MenusManager() {
     if (!error) setMenus(data || []);
   };
 
+  const uploadImage = async (file) => {
+    if (!file) return "";
+    try {
+      const fileName = `${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("menus")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: urlData } = supabase.storage.from("menus").getPublicUrl(fileName);
+      return urlData.publicUrl;
+    } catch (err) {
+      setMessage("Gagal upload gambar: " + err.message);
+      setMessageType("error");
+      return "";
+    }
+  };
+
   const addMenu = async () => {
-    const { error } = await supabase.from("menus").insert([newMenu]);
+    let imageUrl = "";
+    if (newImageFile) imageUrl = await uploadImage(newImageFile);
+
+    const { error } = await supabase.from("menus").insert([
+      { ...newMenu, image: imageUrl },
+    ]);
+
     if (!error) {
       setMessage("Menu berhasil ditambahkan ✅");
       setMessageType("success");
-      setNewMenu({ name: "", price: 0 });
+      setNewMenu({ name: "", price: 0, description: "", image: "", is_visible: true });
+      setNewImageFile(null);
       fetchMenus();
     } else {
       setMessage("Gagal menambah menu: " + error.message);
@@ -36,15 +76,29 @@ export default function MenusManager() {
 
   const startEdit = (menu) => {
     setEditId(menu.id);
-    setEditData({ name: menu.name, price: menu.price });
+    setEditData({
+      ...menu,
+      description: menu.description || "",
+    });
+    setEditImageFile(null);
   };
 
   const saveEdit = async (id) => {
-    const { error } = await supabase.from("menus").update(editData).eq("id", id);
+    let imageUrl = editData.image;
+    if (editImageFile) imageUrl = await uploadImage(editImageFile);
+
+    const { id: _, ...updateData } = editData;
+
+    const { error } = await supabase
+      .from("menus")
+      .update({ ...updateData, image: imageUrl })
+      .eq("id", id);
+
     if (!error) {
       setMessage("Menu berhasil diubah ✨");
       setMessageType("success");
       setEditId(null);
+      setEditImageFile(null);
       fetchMenus();
     } else {
       setMessage("Gagal mengubah menu: " + error.message);
@@ -66,7 +120,7 @@ export default function MenusManager() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-5xl mx-auto p-4">
       <h2 className="text-2xl font-bold mb-6 text-pink-700">🍽️ Kelola Menu</h2>
 
       {/* Notifikasi */}
@@ -85,12 +139,12 @@ export default function MenusManager() {
       )}
 
       {/* Tambah Menu */}
-      <div className="mb-6 flex flex-col md:flex-row gap-3 items-center bg-gray-50 p-4 rounded-lg shadow-sm">
+      <div className="mb-6 flex flex-col gap-3 bg-gray-50 p-4 rounded-lg shadow-sm">
         <input
           placeholder="Nama Menu"
           value={newMenu.name}
           onChange={(e) => setNewMenu({ ...newMenu, name: e.target.value })}
-          className="border rounded-lg px-3 py-2 flex-1"
+          className="border rounded-lg px-3 py-2"
         />
         <input
           type="number"
@@ -99,8 +153,31 @@ export default function MenusManager() {
           onChange={(e) =>
             setNewMenu({ ...newMenu, price: Number(e.target.value) })
           }
-          className="border rounded-lg px-3 py-2 w-32"
+          className="border rounded-lg px-3 py-2"
         />
+        <textarea
+          placeholder="Deskripsi"
+          value={newMenu.description}
+          onChange={(e) =>
+            setNewMenu({ ...newMenu, description: e.target.value })
+          }
+          className="border rounded-lg px-3 py-2"
+        />
+        <input
+          type="file"
+          onChange={(e) => setNewImageFile(e.target.files[0])}
+          className="border rounded-lg px-3 py-2"
+        />
+        <label className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            checked={newMenu.is_visible}
+            onChange={(e) =>
+              setNewMenu({ ...newMenu, is_visible: e.target.checked })
+            }
+          />
+          Tampilkan di profil
+        </label>
         <button
           onClick={addMenu}
           className="bg-green-500 hover:bg-green-600 text-white font-semibold px-4 py-2 rounded-lg shadow"
@@ -109,132 +186,65 @@ export default function MenusManager() {
         </button>
       </div>
 
-      {/* Tabel Menu (Desktop) */}
-      <div className="hidden md:block overflow-x-auto rounded-lg shadow">
-        <table className="w-full border-collapse">
-          <thead className="bg-pink-100 text-pink-800">
-            <tr>
-              <th className="p-3 text-left">ID</th>
-              <th className="p-3 text-left">Nama</th>
-              <th className="p-3 text-left">Harga</th>
-              <th className="p-3 text-center">Aksi</th>
-            </tr>
-          </thead>
-          <tbody>
-            {menus.map((m, idx) => (
-              <tr
-                key={m.id}
-                className={`${
-                  idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                } hover:bg-pink-50 transition`}
-              >
-                <td className="p-3">{m.id}</td>
-                <td className="p-3">
-                  {editId === m.id ? (
-                    <input
-                      value={editData.name}
-                      onChange={(e) =>
-                        setEditData({ ...editData, name: e.target.value })
-                      }
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                  ) : (
-                    m.name
-                  )}
-                </td>
-                <td className="p-3">
-                  {editId === m.id ? (
-                    <input
-                      type="number"
-                      value={editData.price}
-                      onChange={(e) =>
-                        setEditData({
-                          ...editData,
-                          price: Number(e.target.value),
-                        })
-                      }
-                      className="border rounded px-2 py-1 w-full"
-                    />
-                  ) : (
-                    `Rp ${m.price.toLocaleString()}`
-                  )}
-                </td>
-                <td className="p-3 flex justify-center gap-2">
-                  {editId === m.id ? (
-                    <>
-                      <button
-                        onClick={() => saveEdit(m.id)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
-                      >
-                        Simpan
-                      </button>
-                      <button
-                        onClick={() => setEditId(null)}
-                        className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded"
-                      >
-                        Batal
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <button
-                        onClick={() => startEdit(m)}
-                        className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => deleteMenu(m.id)}
-                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
-                      >
-                        Hapus
-                      </button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Card View (Mobile) */}
-      <div className="space-y-4 md:hidden">
+      {/* Card/Grid Menu untuk mobile/tablet/desktop */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
         {menus.map((m) => (
           <div
             key={m.id}
-            className="bg-white rounded-lg shadow p-4 border border-pink-100"
+            className="bg-white rounded-lg shadow p-4 flex flex-col justify-between"
           >
             {editId === m.id ? (
               <>
                 <input
-                  value={editData.name}
+                  value={editData.name || ""}
                   onChange={(e) =>
                     setEditData({ ...editData, name: e.target.value })
                   }
-                  className="border rounded px-2 py-1 w-full mb-2"
+                  className="border rounded px-2 py-1 mb-2"
+                  placeholder="Nama Menu"
                 />
                 <input
                   type="number"
-                  value={editData.price}
+                  value={editData.price || 0}
                   onChange={(e) =>
-                    setEditData({
-                      ...editData,
-                      price: Number(e.target.value),
-                    })
+                    setEditData({ ...editData, price: Number(e.target.value) })
                   }
-                  className="border rounded px-2 py-1 w-full mb-3"
+                  className="border rounded px-2 py-1 mb-2"
+                  placeholder="Harga"
                 />
+                <textarea
+                  value={editData.description || ""}
+                  onChange={(e) =>
+                    setEditData({ ...editData, description: e.target.value })
+                  }
+                  className="border rounded px-2 py-1 mb-2"
+                  placeholder="Deskripsi"
+                />
+                <input
+                  type="file"
+                  onChange={(e) => setEditImageFile(e.target.files[0])}
+                  className="mb-2"
+                />
+                <label className="flex items-center gap-2 mb-2">
+                  <input
+                    type="checkbox"
+                    checked={editData.is_visible}
+                    onChange={(e) =>
+                      setEditData({ ...editData, is_visible: e.target.checked })
+                    }
+                  />
+                  Tampilkan di profil
+                </label>
                 <div className="flex gap-2">
                   <button
                     onClick={() => saveEdit(m.id)}
-                    className="flex-1 bg-blue-500 text-white px-3 py-2 rounded-lg"
+                    className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded"
                   >
                     Simpan
                   </button>
                   <button
                     onClick={() => setEditId(null)}
-                    className="flex-1 bg-gray-400 text-white px-3 py-2 rounded-lg"
+                    className="bg-gray-400 hover:bg-gray-500 text-white px-3 py-1 rounded"
                   >
                     Batal
                   </button>
@@ -242,20 +252,27 @@ export default function MenusManager() {
               </>
             ) : (
               <>
+                {m.image && (
+                  <img
+                    src={m.image}
+                    alt={m.name}
+                    className="h-32 w-full object-cover rounded mb-2"
+                  />
+                )}
                 <h3 className="font-semibold text-lg">{m.name}</h3>
-                <p className="text-gray-600 mb-3">
-                  Harga: <span className="font-bold">Rp {m.price.toLocaleString()}</span>
-                </p>
+                <p className="text-sm text-gray-600 mb-1">{m.description}</p>
+                <p className="font-medium mb-1">Rp {m.price.toLocaleString()}</p>
+                <p className="mb-2">{m.is_visible ? "✅ Visible" : "❌ Hidden"}</p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => startEdit(m)}
-                    className="flex-1 bg-yellow-500 text-white px-3 py-2 rounded-lg"
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded"
                   >
                     Edit
                   </button>
                   <button
                     onClick={() => deleteMenu(m.id)}
-                    className="flex-1 bg-red-500 text-white px-3 py-2 rounded-lg"
+                    className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded"
                   >
                     Hapus
                   </button>

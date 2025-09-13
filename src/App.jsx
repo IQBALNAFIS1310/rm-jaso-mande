@@ -1,5 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
-import { createContext } from "react";
+import { createContext, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
 
 export const CartContext = createContext();
@@ -7,14 +7,15 @@ export const CartContext = createContext();
 export default function App() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [cart, setCart] = useState([]); // state untuk keranjang
 
   const handleLogout = () => {
-    logout();           // hapus cookie & set user null
-    navigate("/login");  // redirect ke login
+    logout();
+    navigate("/login");
   };
 
   return (
-    <CartContext.Provider>
+    <CartContext.Provider value={{ cart, setCart }}>
       <div className="flex min-h-screen flex-col">
         <header className="flex justify-between items-center p-4 bg-gray-100 shadow">
           <h1 className="text-xl font-bold">Selamat datang, {user?.name}</h1>
